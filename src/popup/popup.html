@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Цена в рублях</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="popup">
+      <header class="popup__header">
+        <h1>Цена в рублях</h1>
+        <label class="switch">
+          <input id="enabled" type="checkbox" />
+          <span class="switch__slider"></span>
+        </label>
+      </header>
+
+      <section class="popup__section">
+        <label class="field" for="rateSource">Источник курса</label>
+        <select id="rateSource" class="field__control">
+          <option value="cbr">ЦБ РФ</option>
+          <option value="market">Рыночный курс</option>
+          <option value="moex">Московская биржа</option>
+        </select>
+        <p id="rateSourceHint" class="hint"></p>
+      </section>
+
+      <section class="popup__section popup__meta">
+        <p id="updatedAt">Курс не загружен</p>
+        <button id="refreshRates" type="button" class="button">Обновить курс</button>
+      </section>
+
+      <section class="popup__section">
+        <button id="blacklistSite" type="button" class="button button--secondary">
+          Не показывать на этом сайте
+        </button>
+      </section>
+
+      <p id="status" class="status" role="status"></p>
+    </main>
+    <script type="module" src="popup.ts"></script>
+  </body>
+</html>
