@@ -173,8 +173,6 @@ function startObserver(): void {
   if (observer || !document.body) return;
 
   observer = new MutationObserver((mutations) => {
-    let needsSubtreeScan = false;
-
     for (const mutation of mutations) {
       if (mutation.type === "characterData") {
         if (mutation.target instanceof Text) {
@@ -187,13 +185,9 @@ function startObserver(): void {
         if (node.nodeType === Node.TEXT_NODE) {
           processTextNode(node as Text);
         } else if (node.nodeType === Node.ELEMENT_NODE) {
-          needsSubtreeScan = true;
+          scheduleScan(node);
         }
       }
-    }
-
-    if (needsSubtreeScan) {
-      scheduleScan(document.body);
     }
   });
 
