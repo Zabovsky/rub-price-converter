@@ -26,6 +26,7 @@ const SKIP_TAGS = new Set([
 let settings: Settings | null = null;
 let ratesCache: RatesCache | null = null;
 let scanScheduled = false;
+let scanTarget: Node | null = null;
 let observer: MutationObserver | null = null;
 
 async function loadState(): Promise<void> {
@@ -146,12 +147,25 @@ function scanRoot(root: Node): void {
 }
 
 function scheduleScan(root: Node = document.body): void {
-  if (scanScheduled || !root) return;
+  if (!root) return;
+
+  if (root === document.body) {
+    scanTarget = document.body;
+  } else if (!scanTarget) {
+    scanTarget = root;
+  } else if (scanTarget !== document.body) {
+    // Multiple unrelated subtrees changed in one frame — scan the whole page.
+    scanTarget = document.body;
+  }
+
+  if (scanScheduled) return;
   scanScheduled = true;
 
   requestAnimationFrame(() => {
     scanScheduled = false;
-    scanRoot(root);
+    const target = scanTarget ?? document.body;
+    scanTarget = null;
+    scanRoot(target);
   });
 }
 
@@ -159,19 +173,33 @@ function startObserver(): void {
   if (observer || !document.body) return;
 
   observer = new MutationObserver((mutations) => {
+    let needsSubtreeScan = false;
+
     for (const mutation of mutations) {
-      mutation.addedNodes.forEach((node) => {
+      if (mutation.type === "characterData") {
+        if (mutation.target instanceof Text) {
+          processTextNode(mutation.target);
+        }
+        continue;
+      }
+
+      for (const node of mutation.addedNodes) {
         if (node.nodeType === Node.TEXT_NODE) {
           processTextNode(node as Text);
         } else if (node.nodeType === Node.ELEMENT_NODE) {
-          scheduleScan(node);
+          needsSubtreeScan = true;
         }
-      });
+      }
+    }
+
+    if (needsSubtreeScan) {
+      scheduleScan(document.body);
     }
   });
 
   observer.observe(document.body, {
     childList: true,
+    characterData: true,
     subtree: true,
   });
 }
